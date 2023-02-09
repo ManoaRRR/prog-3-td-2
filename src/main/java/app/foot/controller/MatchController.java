@@ -1,15 +1,12 @@
 package app.foot.controller;
 
-import app.foot.model.Match;
-import app.foot.model.PlayerScorer;
-import app.foot.repository.entity.MatchEntity;
-import app.foot.repository.mapper.MatchMapper;
+import app.foot.controller.rest.Match;
+import app.foot.controller.rest.PlayerScorer;
+import app.foot.controller.rest.mapper.MatchRestMapper;
+import app.foot.controller.rest.mapper.PlayerScorerRestMapper;
+import app.foot.controller.validator.GoalValidator;
 import app.foot.service.MatchService;
-import app.foot.service.PlayerScorerService;
-import app.foot.service.PlayerSocerService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,30 +14,29 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 public class MatchController {
-    private final MatchService service;
-    private MatchMapper matchMapper;
-
-    @GetMapping("/matches")
-    public List<Match> getMatches() {
-        return service.getMatches();
-    }
-
-    // Request for post average
-    @PostMapping("/matches/{matchId}/goals")
-    public ResponseEntity<Match> addGoals(@PathVariable int matchId, @RequestBody List<PlayerScorer> playerScorers ) throws BadRequestException {
-        PlayerScorerService.addGoals(playerScorers, matchId);
-        for(PlayerScorer scorer : playerScorers){
-            if(scorer.getPlayer().getIsGuardian()){
-                throw new BadRequestException("goalkeeper can't score");
+    public class MatchController extends BaseController {
+        private final MatchService service;
+        private final GoalValidator validator;
+        private final MatchRestMapper mapper;
+         public class MatchController {
+            public Match getMatchById(@PathVariable Integer id) {
+                return mapper.toRest(service.getMatchById(id));
             }
-            if (scorer.getMinute() < 1 || scorer.getMinute() > 90){
-                throw new BadRequestException("The minute should be between 1 and 90");
+
+            @GetMapping("/matches")
+            public List<Match> getMatches() {
+                return service.getMatches().stream()
+                        .map(mapper::toRest)
+                        .toList();
+            }
+
+            //TODO: add integration test ok and ko of adding goals into match where id = 3
+            @PostMapping("/matches/{matchId}/goals")
+            public Match addGoals(@PathVariable int matchId, @RequestBody List<PlayerScorer> scorers) {
+                scorers.forEach(validator);
+                List<app.foot.model.PlayerScorer> scorerList = scorers.stream()
+                        .map(scorerMapper::toDomain)
+                        .toList();
+                return mapper.toRest(service.addGoals(matchId, scorerList));
             }
         }
-        return  new ResponseEntity<>(matchMapper.toDomain(service.getMatchById(matchId)), HttpStatus.OK);
-    }
-}
-
-
-
-

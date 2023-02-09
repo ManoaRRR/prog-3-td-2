@@ -6,8 +6,8 @@ import java.time.Instant;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Builder
+@Data
+@Builder(toBuilder = true)
 @EqualsAndHashCode
 @ToString
 public class Match {

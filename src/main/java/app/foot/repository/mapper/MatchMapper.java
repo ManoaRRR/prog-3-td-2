@@ -1,5 +1,4 @@
 package app.foot.repository.mapper;
-
 import app.foot.model.Match;
 import app.foot.model.PlayerScorer;
 import app.foot.model.TeamMatch;
@@ -10,7 +9,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-
 @Component
 @AllArgsConstructor
 public class MatchMapper {
